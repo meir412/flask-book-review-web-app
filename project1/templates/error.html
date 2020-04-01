@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    not found
+{% endblock %}
+
+{% block body %}
+
+    <h1>No results found</h1>
+    <p>Unfortunately, none of the books in our database matched your search.</p>
+    <a href="{{ url_for('index') }}">New search</a>
+
+    
+
+{% endblock %}

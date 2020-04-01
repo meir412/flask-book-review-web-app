@@ -36,9 +36,7 @@ db.execute("""
     isbn  VARCHAR PRIMARY KEY,
     title VARCHAR NOT NULL,
     author VARCHAR NOT NULL,
-    year INTEGER NOT NULL,
-    review_count INTEGER,
-    average_score REAL
+    year INTEGER NOT NULL
     );
 """)
 
@@ -47,7 +45,8 @@ db.execute("""
     id SERIAL PRIMARY KEY,
     book  VARCHAR REFERENCES books (isbn),
     reviewer  INTEGER REFERENCES users,
-    content VARCHAR NOT NULL
+    rate INTEGER NOT NULL,
+    review VARCHAR NOT NULL
     );
 """)
 

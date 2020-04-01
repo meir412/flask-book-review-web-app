@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    search for books
+{% endblock %}
+
+{% block body %}
+
+    <h1>Search for a book to review</h1>
+
+    <form action="{{ url_for('results') }}" method="post">
+        <label for="book_search">Search for a book by isbn, title or author</label><br>
+        <input type="text" id="book_search" name="book_search">
+        <input type="submit" value="Search">           
+    </form>
+    
+
+{% endblock %}
