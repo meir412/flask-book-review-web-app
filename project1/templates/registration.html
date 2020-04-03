@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    registration
+{% endblock title %}
+
+{% block body %}
+    <h1>Registration to review website</h1>
+    <form action="{{ url_for('registration')}}" method="post">
+        <label for="username">User Name</label>
+        
+        {% if error_username or error_password %}
+            <input id="username" type="text" name = "username", placeholder="username" required, value="{{ username }}">    
+        {% else %}
+            <input id="username" type="text" name = "username", placeholder="username" required>
+        {% endif %}
+        <br>
+        
+        {% if error_username %}
+            <ul><li>A user is already registered under that username</li></ul>
+        {% endif %}
+        
+        <label for="password1">Password</label>
+        <input id="password1" type="password" name = "password1" placeholder="password" minlength="5" required><br>
+        <label for="password2">Repeat Password</label>
+        <input id="password2" type="password" name = "password2" placeholder="password" minlength="5" required><br>
+        
+        {% if error_password %}
+            <ul><li>The two passwords you entered do not match</li></ul>        
+        {% endif %}
+        
+        <input type="submit" value="Submit">
+    </form>
+
+    <p> Already registered? <a href="{{ url_for('login') }}">Log in here</a></p>
+
+{% endblock body %}

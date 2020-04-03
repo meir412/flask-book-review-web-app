@@ -33,8 +33,10 @@
         {% else %}
             <p>No reviews yet, you're welcome to leave the first one!</p>        
         {% endif %}
+    
+    {% if not already_reviewed %}
 
-    <h2> Add a new review</h2>
+        <h2> Add a new review</h2>
 
         <form action="{{ url_for('bookDetail', isbn=book.isbn)}}" method="post">
             <label for="rate">Rate the book between 1 (didn't like) to 5 (loved)</label>
@@ -42,6 +44,8 @@
             <textarea name = "review", placeholder="Write your review"></textarea><br>
             <input type="submit" value="Submit">           
         </form>
+
+    {% endif %}
         
 
     <a href="{{ url_for('index') }}">New search</a>

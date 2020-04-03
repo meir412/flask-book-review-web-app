@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask import session
 from flask import render_template
+from flask import redirect
 from flask import request
 from flask_session import Session
 from sqlalchemy import create_engine
@@ -28,12 +29,106 @@ db = scoped_session(sessionmaker(bind=engine))
 @app.route("/")
 def index():
 
+    if session.get('username') is None:
+        return redirect('/login')
+
     books = db.execute("SELECT * FROM books").fetchall()
     return render_template("index.html")
+
+@app.route("/registration",methods=['GET','POST'])
+def registration():
+
+    logged_in = False
+    if session.get("username") is not None:
+        logged_in = True
+        username = session['username']
+        return render_template("error.html", logged_in=logged_in, username=username)
+
+    if request.method == "GET":
+        return render_template("registration.html")
+    
+    else:
+        username = request.form['username']
+        pass1 = request.form['password1']
+        pass2 = request.form['password2']
+        error_username = False
+        error_password = False
+
+        # check that user doesnt already exist
+        user = db.execute(f"""
+            select * from users where username = '{username}';
+        """)
+        
+        if user.rowcount > 0:
+            error_username = True
+            return render_template("registration.html", username = username, error_username = error_username)
+
+        # check the passwords match
+        if pass1 != pass2:
+            error_password = True
+            return render_template("registration.html", username = username, error_password=error_password)
+
+        db.execute(f"""
+            INSERT INTO users (username, password)
+            VALUES ('{username}','{pass1}')
+        """)
+        db.commit()
+        session["username"] = username
+        return redirect("/")
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+
+    logged_in = False
+    if session.get("username") is not None:
+        logged_in = True
+        username = session['username']
+        return render_template("error.html", logged_in=logged_in, username=username)
+
+    if request.method == 'GET':
+        return render_template("login.html")
+    
+    username = request.form['username']
+    password = request.form['password']
+    error_no_user = False
+    error_wrong_pass = False
+
+    user = db.execute(f"""
+        SELECT * FROM users
+        WHERE username='{username}'
+    """)
+
+    # check if username exists in db
+    if user.rowcount == 0:
+        error_no_user = True
+        return render_template("login.html", error_no_user = error_no_user)
+    
+    user = user.fetchone()
+
+    # check if password matches password in db
+    if user['password'] != password:
+        error_wrong_pass = True
+        return render_template("login.html", error_wrong_pass=error_wrong_pass, username=username)
+    
+    # TODO: add username to session
+    session["username"] = username
+    return redirect("/")
+
+
+@app.route("/logout")
+def logout():
+
+    if session.get('username') is not None:
+        session.pop('username')
+
+    return redirect('/login')
 
 
 @app.route("/results", methods=['POST'])
 def results():
+
+    if session.get('username') is None:
+        return redirect('/login')
 
     search = request.form['book_search']
     books = db.execute(f"""
@@ -42,7 +137,7 @@ def results():
     """).fetchall()
 
     if len(books) == 0:
-        return render_template("error.html")
+        return render_template("error.html", no_result=True)
 
     else:
         return render_template("results.html", books=books, search=search)
@@ -51,7 +146,12 @@ def results():
 @app.route("/books/<string:isbn>", methods = ['POST', 'GET'])
 def bookDetail(isbn):
 
+    if session.get('username') is None:
+        return redirect('/login')
+
+    user_id = db.execute(f"select id from users where username='{session['username']}'").fetchone().id
     book = db.execute(f"select * from books where isbn='{isbn}';").fetchone()
+    already_reviewed = False
 
     reviews = db.execute(f"""
         select * from books join reviews
@@ -62,17 +162,25 @@ def bookDetail(isbn):
     if book is None:
         return render_template("error.html")
 
+    for review in reviews:
+        if review.reviewer == user_id:
+            already_reviewed = True
+            break
+
+
     if request.method == "GET":
-        return render_template("book_detail.html", book=book, reviews=reviews)
+        return render_template("book_detail.html", book=book, reviews=reviews, already_reviewed=already_reviewed)
     
     else:
         rate = request.form['rate']
         review = request.form['review']
+        username = session['username']
 
-        # TODO: once user functionality exists change 1 to <user.id> in query below
+        user = db.execute(f"select id from users where username='{username}';").fetchone().id
+
         db.execute(f"""
         INSERT INTO reviews (book, reviewer, rate, review)
-        VALUES ('{isbn}', 1, {rate}, '{review}')
+        VALUES ('{isbn}', {user}, {rate}, '{review}')
         """)
 
         db.commit()
@@ -83,8 +191,9 @@ def bookDetail(isbn):
             where books.isbn='{isbn}';
         """).fetchall()
 
-        # TODO: don't render the form after insertion so user won't leave second review
-        return render_template("book_detail.html", book=book, reviews=reviews)
+        # don't render the form after insertion so user won't leave second review
+        already_reviewed = True
+        return render_template("book_detail.html", book=book, reviews=reviews, already_reviewed=already_reviewed)
 
 
 @app.route("/api/<string:isbn>")

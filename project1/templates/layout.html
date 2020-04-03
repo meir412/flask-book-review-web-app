@@ -6,6 +6,12 @@
     </head>
     <body>
         <div class="container">
+
+            {% if session['username'] %}
+                <p>logged in as <strong> {{ session['username'] }}</strong></p>
+                <a href="{{ url_for('logout') }}">Log out</a>
+            {% endif %}
+            
             {% block body %}
             {% endblock %}
         </div>
