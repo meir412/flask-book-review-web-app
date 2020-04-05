@@ -1,6 +1,8 @@
 import os
+import json
 
 from flask import Flask
+from flask import jsonify
 from flask import session
 from flask import render_template
 from flask import redirect
@@ -9,6 +11,7 @@ from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
+import requests
 
 app = Flask(__name__)
 
@@ -151,7 +154,22 @@ def bookDetail(isbn):
 
     user_id = db.execute(f"select id from users where username='{session['username']}'").fetchone().id
     book = db.execute(f"select * from books where isbn='{isbn}';").fetchone()
-    already_reviewed = False
+    
+    if book is None:
+        return render_template("error.html")
+
+    goodreads_data = requests.get("https://www.goodreads.com/book/review_counts.json",
+        params={"key": os.getenv("GOODREADS_KEY"), "isbns": book['isbn']})
+    
+    gr_review_count = None
+    gr_average_rate = None
+
+    # check if book actually exists on goodreads
+    if goodreads_data.status_code == 200:
+        gr_review_count = goodreads_data.json()['books'][0]['work_ratings_count']
+        gr_average_rate = goodreads_data.json()['books'][0]['average_rating'] 
+    
+    
 
     reviews = db.execute(f"""
         select * from books join reviews
@@ -159,8 +177,7 @@ def bookDetail(isbn):
         where books.isbn='{isbn}';
     """).fetchall()
 
-    if book is None:
-        return render_template("error.html")
+    already_reviewed = False
 
     for review in reviews:
         if review.reviewer == user_id:
@@ -169,7 +186,7 @@ def bookDetail(isbn):
 
 
     if request.method == "GET":
-        return render_template("book_detail.html", book=book, reviews=reviews, already_reviewed=already_reviewed)
+        return render_template("book_detail.html", book=book, reviews=reviews, already_reviewed=already_reviewed, gr_review_count=gr_review_count, gr_average_rate=gr_average_rate)
     
     else:
         rate = request.form['rate']
@@ -193,15 +210,33 @@ def bookDetail(isbn):
 
         # don't render the form after insertion so user won't leave second review
         already_reviewed = True
-        return render_template("book_detail.html", book=book, reviews=reviews, already_reviewed=already_reviewed)
+        return render_template("book_detail.html", book=book, reviews=reviews, already_reviewed=already_reviewed, gr_review_count=gr_review_count, gr_average_rate=gr_average_rate)
 
 
 @app.route("/api/<string:isbn>")
 def apiBook(isbn):
-    pass
-    
 
-@app.route("/login")
-def logIn():
-    pass
+    book = db.execute(f"select * from books where isbn='{isbn}';").fetchone()
+    
+    if book is None:
+        return jsonify({'errorCode' : 404, 'message' : 'Book not found on website'})
+
+    else:
+        goodreads_data = requests.get("https://www.goodreads.com/book/review_counts.json",
+        params={"key": os.getenv("GOODREADS_KEY"), "isbns": book['isbn']})
+    
+        gr_review_count = None
+        gr_average_rate = None
+
+        # check if book actually exists on goodreads
+        if goodreads_data.status_code == 200:
+            gr_review_count = goodreads_data.json()['books'][0]['work_ratings_count']
+            gr_average_rate = goodreads_data.json()['books'][0]['average_rating']
+
+        book_properties = {"title": book['title'], "author": book['author'],
+            "year": book['year'], "isbn": isbn, "review_count": gr_review_count,
+            "average_score": gr_average_rate}
+
+        return jsonify(book_properties) 
+
     

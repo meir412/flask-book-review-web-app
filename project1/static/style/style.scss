@@ -1,0 +1,98 @@
+$background-color: turquoise;
+
+html, body, .container   {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    // background-color: $background-color;
+    margin: 0;
+    font-family: 'Lato';
+    src: url('static/font/Lato/Lato-Regular.ttf');
+
+    .top-bar {
+        display: flex;
+        background-color: black;
+        padding-top: 2%;
+        padding-bottom: 2%;
+
+        p {
+            flex: 4;
+            color: white;
+            margin: 0;
+            padding-left: 1.5%;
+        }
+        a {
+            flex: 1;
+            text-align: right;
+            margin-right: 1.5%;
+            text-decoration: none;
+            color: white;
+        }
+
+        a:hover {
+            color: $background-color;
+        }
+    }
+
+    .content{
+        height: 100%;
+        overflow: scroll;
+        padding-left: 1.5%;
+        background-image: linear-gradient(turquoise, black);
+        // background-color: $background-color;
+
+        h1, h2, form, p {
+            margin: 0;
+            padding-top: 2%;
+            padding-bottom: 2%;
+            color: white;
+        }
+
+        ul {
+            padding-left: 0;
+            li {
+                color: white;
+                list-style: none;
+                padding-top: 1%;
+                padding-bottom: 1%;
+    
+            }
+        }
+        
+
+        a {
+            text-decoration: none;
+            color: white;
+        }
+
+        a:hover {
+            color: black;
+        } 
+        
+        #bookdetail {
+            display: flex;
+            margin-bottom: 5%;
+
+            #details {
+                flex: 3;
+                padding-right: 5%;
+            }
+
+            #new-review {
+                flex: 2;
+            }
+        }
+    }
+
+    
+}
+
+// .container {
+//     color: $background-color;
+
+//     h1 {
+//         color: $background-color;
+//     }
+// }

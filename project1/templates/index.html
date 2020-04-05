@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-
+    <link rel="styleshhet" href="{{ url_for('static', filename='style/style.css') }}">  
     <h1>Search for a book to review</h1>
 
     <form action="{{ url_for('results') }}" method="post">
