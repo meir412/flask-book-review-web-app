@@ -10,9 +10,8 @@
 
     <form action="{{ url_for('results') }}" method="post">
         <label for="book_search">Search for a book by isbn, title or author</label><br>
-        <input type="text" id="book_search" name="book_search">
+        <input type="text" id="book_search" name="book_search", required>
         <input type="submit" value="Search">           
     </form>
     
-
 {% endblock %}

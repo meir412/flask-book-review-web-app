@@ -3,6 +3,7 @@ import json
 
 from flask import Flask
 from flask import jsonify
+from flask import make_response
 from flask import session
 from flask import render_template
 from flask import redirect
@@ -31,16 +32,26 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/")
 def index():
-
+    """
+    View for the home page, contains a searchbar that allows users to search for a book
+    by it's name, author or isbn number (will also return results that the search input
+    is only part of).
+    The form redirects to the results view via post method, passing the searched text on.
+    """
     if session.get('username') is None:
         return redirect('/login')
 
-    books = db.execute("SELECT * FROM books").fetchall()
     return render_template("index.html")
 
 @app.route("/registration",methods=['GET','POST'])
 def registration():
-
+    """
+    This view allows an unregistered user to register to the website with a username and password.
+    There are two validations that are run on the form and only after they pass the user will be added
+    to the db and redirected to the home page:
+    1. That the username doesn't exist in the db yet
+    2. That the password and the repeated password match
+    """
     logged_in = False
     if session.get("username") is not None:
         logged_in = True
@@ -81,6 +92,13 @@ def registration():
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    """
+    This view allows a registered user to log in to the website with a username and password.
+    There are two validations that are run on the form and only after they pass the user will be
+    logged in and redirected to the home page:
+    1. That the username exists in the db
+    2. That the password matches the password associated to that username in the db
+    """
 
     logged_in = False
     if session.get("username") is not None:
@@ -120,7 +138,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-
+    "View for logout - pops the session variable if already logged in and redirects to log in"
     if session.get('username') is not None:
         session.pop('username')
 
@@ -129,7 +147,10 @@ def logout():
 
 @app.route("/results", methods=['POST'])
 def results():
-
+    """
+    View that displays a list of book results according to the query posted by the user.
+    If no books in the db match the query, an error html page is rendered.
+    """
     if session.get('username') is None:
         return redirect('/login')
 
@@ -148,7 +169,15 @@ def results():
 
 @app.route("/books/<string:isbn>", methods = ['POST', 'GET'])
 def bookDetail(isbn):
-
+    """
+    View that accepts a book isbn in its url. Details, existing reviews, and a form to submit a
+    new review are rendered according to the given book isbn.
+    If no book exists in the db with the given isbn an error html page is rendered.
+    If the book exists on GoodReads (www.goodreads.com), also display it's review count and
+    average rate from GoodReads.
+    The form to add a new review is only displayed if the user hasn't submitted a review for
+    this book in the past.
+    """
     if session.get('username') is None:
         return redirect('/login')
 
@@ -215,11 +244,15 @@ def bookDetail(isbn):
 
 @app.route("/api/<string:isbn>")
 def apiBook(isbn):
-
+    """
+    This view is the external api for the website. It accepts a book isbn in the url and returns
+    a json with details regarding the book.
+    If no books were found for the given isbn a json with an error message is returned.
+    """
     book = db.execute(f"select * from books where isbn='{isbn}';").fetchone()
     
     if book is None:
-        return jsonify({'errorCode' : 404, 'message' : 'Book not found on website'})
+        return make_response(jsonify({'errorCode' : 404, 'message' : 'Book not found on website'}), 404)
 
     else:
         goodreads_data = requests.get("https://www.goodreads.com/book/review_counts.json",
@@ -237,6 +270,6 @@ def apiBook(isbn):
             "year": book['year'], "isbn": isbn, "review_count": gr_review_count,
             "average_score": gr_average_rate}
 
-        return jsonify(book_properties) 
+        return make_response(jsonify(book_properties), 200) 
 
     

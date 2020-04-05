@@ -76,6 +76,11 @@ body .content a:hover {
   color: black;
 }
 
+body .content form input {
+  margin-top: 0.5%;
+  margin-bottom: 0.5%;
+}
+
 body .content #bookdetail {
   display: -webkit-box;
   display: -ms-flexbox;

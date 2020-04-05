@@ -6,7 +6,6 @@ html, body, .container   {
 }
 
 body {
-    // background-color: $background-color;
     margin: 0;
     font-family: 'Lato';
     src: url('static/font/Lato/Lato-Regular.ttf');
@@ -23,6 +22,7 @@ body {
             margin: 0;
             padding-left: 1.5%;
         }
+
         a {
             flex: 1;
             text-align: right;
@@ -41,7 +41,6 @@ body {
         overflow: scroll;
         padding-left: 1.5%;
         background-image: linear-gradient(turquoise, black);
-        // background-color: $background-color;
 
         h1, h2, form, p {
             margin: 0;
@@ -57,11 +56,9 @@ body {
                 list-style: none;
                 padding-top: 1%;
                 padding-bottom: 1%;
-    
             }
         }
         
-
         a {
             text-decoration: none;
             color: white;
@@ -69,7 +66,14 @@ body {
 
         a:hover {
             color: black;
-        } 
+        }
+        
+        form {
+            input {
+                margin-top: 0.5%;
+                margin-bottom: 0.5%;    
+            }
+        }
         
         #bookdetail {
             display: flex;
@@ -85,14 +89,4 @@ body {
             }
         }
     }
-
-    
 }
-
-// .container {
-//     color: $background-color;
-
-//     h1 {
-//         color: $background-color;
-//     }
-// }
